@@ -25,11 +25,9 @@ public class ExcelController {
         for (int i = 0; i < 120000; i++) {
             list.add(book);
         }
-        SXSSFWorkbook workbook = excelService.excelFileDownloadProcess(list, false);
-
+        SXSSFWorkbook workbook = excelService.excelFileDownloadProcess(list, true);
         model.addAttribute("workbook", workbook);
         model.addAttribute("workbookName", "테스트");
-
         return "excelView";
     }
 

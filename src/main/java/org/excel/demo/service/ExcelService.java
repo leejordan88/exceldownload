@@ -1,12 +1,12 @@
 package org.excel.demo.service;
 
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.streaming.SXSSFSheet;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.excel.demo.annotation.Excel;
 import org.springframework.stereotype.Service;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -16,8 +16,8 @@ import java.util.List;
 public class ExcelService {
 
     private static final String SHEET = "sheet";
-    private static final int SHEET_SIZE = 65000;
-    private static final int FIXEL = 500;
+    private static final int SHEET_SIZE = 60000;
+    private static final int FIXEL = 100;
 
     public SXSSFWorkbook makeSimpleExcelWorkbook(List<?> list, boolean setHeaderStyle) throws IllegalAccessException {
         SXSSFWorkbook workbook = new SXSSFWorkbook();
@@ -28,15 +28,14 @@ public class ExcelService {
         Arrays.stream(cls.getDeclaredFields()).forEach(f -> {
             f.setAccessible(true);
             Excel annotation = f.getAnnotation(Excel.class);
-            if (annotation != null) {
+            if (annotation instanceof Excel) {
                 headerNameList.add(annotation.name());
                 headerWidthList.add(annotation.width());
             }
         });
-
         // 시트 정보
         int sheetLength = (list.size() < SHEET_SIZE) ? 1 : list.size() / SHEET_SIZE;
-        sheetLength = (sheetLength != 1 && (sheetLength % SHEET_SIZE == 0)) ? sheetLength : sheetLength + 1;
+        sheetLength = (sheetLength != 1 && (list.size() % SHEET_SIZE == 0)) ? sheetLength : sheetLength + 1;
         int shhetIndex = 0;
         int rowIndex = 0;
         int cellIndex = 0;
@@ -50,6 +49,11 @@ public class ExcelService {
             Row headerRow = sheet.createRow(rowIndex++);
 
             //해더 정보
+            CellStyle headerRowStyle = workbook.createCellStyle();
+            headerRowStyle.setAlignment(HorizontalAlignment.CENTER);
+            headerRowStyle.setFillForegroundColor(IndexedColors.AQUA.getIndex());
+            headerRowStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+
             for (String name : headerNameList) {
                 sheet.setColumnWidth(cellIndex, name.length() * FIXEL);
 
@@ -61,12 +65,14 @@ public class ExcelService {
                 // 해당 행의 첫번째 열 셀 생성
                 Cell headerCell = headerRow.createCell(cellIndex);
                 headerCell.setCellValue(name);
+                headerCell.setCellStyle(headerRowStyle);
                 cellIndex++;
             }
             
             //바디 정보
             int lastSheetCount = (list.size() < SHEET_SIZE) ? list.size()
                     : (bodyIndex + SHEET_SIZE > list.size()) ? list.size() : bodyIndex + SHEET_SIZE;
+
             for (int j = bodyIndex; j < lastSheetCount; j++) {
 
                 if (j == lastSheetCount - 1) {
@@ -80,9 +86,14 @@ public class ExcelService {
                 cellIndex = 0;
                 Field[] declaredFields = bodyClass.getDeclaredFields();
                 for (Field f : declaredFields) {
-                    f.setAccessible(true);
-                    Cell bodyCell = bodyCell = bodyRow.createCell(cellIndex++);
-                    bodyCell.setCellValue(String.valueOf(f.get(o)));
+                    Annotation annotation = f.getAnnotation(Excel.class);
+                    if (annotation instanceof Excel) {
+                        f.setAccessible(true);
+
+                        Cell bodyCell = bodyCell = bodyRow.createCell(cellIndex++);
+                        bodyCell.setCellValue(String.valueOf(f.get(o)));
+                    }
+
                 }
             }
             shhetIndex++;

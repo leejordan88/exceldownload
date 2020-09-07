@@ -5,19 +5,19 @@ import org.excel.demo.annotation.Excel;
 public class Book {
 
 
-    @Excel(name="field1", width = 10)
+    @Excel(name="필드1", width = 10)
     private String a = "aaaaaaa";
 
-    @Excel(name="field2", width = 20)
+    @Excel(name="필드2", width = 20)
     private static String B = "BOOK";
 
-    @Excel(name="field3", width = 30)
+    @Excel(name="필드3", width = 30)
     private static final String C = "ccccc";
 
-    @Excel(name="field4", width = 40)
+//    @Excel(name="필드4", width = 40)
     private String d = "dddddd";
 
-    @Excel(name="field5", width = 50)
+    @Excel(name="필드5", width = 50)
     private String e = "eeeeee";
 
     public Book() {
